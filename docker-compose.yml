@@ -2,8 +2,17 @@ version: '2'
 
 volumes:
   settings:                          # Only required if using PERSISTENT flag (see below)
+  avahi-socket-dir: {}
 
 services:
+  avahi:
+    image: flungo/avahi
+    network_mode: host
+    volumes:
+      - "avahi-socket-dir:/var/run/avahi-daemon"
+    environment:
+      # Separation of responsibilities, this daemon is query-only. The hosts daemon publishes:
+      PUBLISH_DISABLE_PUBLISHING: "yes"
 
   browser:
     build: .
@@ -13,7 +22,8 @@ services:
         - '35173' # Chromium debugging port (optional)
     volumes:
       - 'settings:/data' # Only required if using PERSISTENT flag (see below)
-    network_mode: host  # Only needed to auto display web server on port 80
+      - "avahi-socket-dir:/var/run/avahi-daemon"
+    network_mode: host
     
   webserver:
     build: ./webserver
